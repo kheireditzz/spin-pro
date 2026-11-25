@@ -1,0 +1,2278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#4F46E5">
+  <meta name="description" content="Spin Pro - Roda putar undian serbaguna modern dengan custom nama, suara sintetis, dan perayaan kemenangan.">
+  <title>Spin Pro · Universal Lucky Wheel</title>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       SPIN PRO DESIGN SYSTEM · MODERN BENTO & LIQUID GLASS (ZERO EMOJI)
+       ========================================================================== */
+    :root {
+      /* Dark Theme (Default) */
+      --bg-page: #0B0F19;
+      --bg-card: #111827;
+      --bg-card-subtle: #1F2937;
+      --bg-glass: rgba(17, 24, 39, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.16);
+      
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-subtle: #64748B;
+
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --primary-light: rgba(79, 70, 229, 0.15);
+      --primary-ring: rgba(79, 70, 229, 0.35);
+
+      --accent: #06B6D4;
+      --accent-glow: rgba(6, 182, 212, 0.25);
+      
+      --success: #10B981;
+      --success-light: rgba(16, 185, 129, 0.15);
+      --danger: #EF4444;
+      --danger-light: rgba(239, 68, 68, 0.15);
+
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 8px 16px -2px rgba(0, 0, 0, 0.35);
+      --shadow-lg: 0 20px 32px -4px rgba(0, 0, 0, 0.45);
+      --shadow-glow: 0 0 40px rgba(79, 70, 229, 0.25);
+
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --radius-full: 9999px;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg-page: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-card-subtle: #F1F5F9;
+      --bg-glass: rgba(255, 255, 255, 0.9);
+      --border: #E2E8F0;
+      --border-hover: #CBD5E1;
+
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --text-subtle: #94A3B8;
+
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --primary-light: #EEF2FF;
+      --primary-ring: rgba(79, 70, 229, 0.2);
+
+      --accent: #0284C7;
+      --accent-glow: rgba(2, 132, 199, 0.15);
+
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 6px 14px -2px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 16px 28px -4px rgba(15, 23, 42, 0.1);
+      --shadow-glow: 0 0 35px rgba(79, 70, 229, 0.15);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient soft background gradient */
+    .ambient-glow {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 600px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, rgba(79, 70, 229, 0.08) 45%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    /* App Shell */
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-height: 100vh;
+    }
+
+    /* Top Navigation Bar */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #4F46E5, #06B6D4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      color: #FFFFFF;
+    }
+
+    .brand-title {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--primary-ring);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-card-subtle);
+      color: var(--text-main);
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+    /* Main Grid: Wheel Left, Controls Right */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Wheel Section Card */
+    .wheel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Status Bar above Wheel */
+    .wheel-status-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      background: var(--bg-card-subtle);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .status-dot.spinning {
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--primary);
+      animation: pulseGlow 1s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      from { transform: scale(0.9); opacity: 0.7; }
+      to { transform: scale(1.3); opacity: 1; }
+    }
+
+    /* Wheel Stage */
+    .wheel-stage {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0 24px;
+    }
+
+    /* Canvas */
+    #wheelCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 50%;
+      box-shadow: var(--shadow-glow), 0 12px 30px rgba(0, 0, 0, 0.35);
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #wheelCanvas:active {
+      cursor: grabbing;
+    }
+
+    /* Physical Pointer / Stopper */
+    .wheel-pointer {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38px;
+      height: 48px;
+      z-index: 10;
+      pointer-events: none;
+      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+      transform-origin: 50% 12px;
+      transition: transform 0.05s ease-out;
+    }
+
+    .wheel-pointer svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Center Spin Button Overlay */
+    .center-spin-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1E293B, #0F172A);
+      border: 4px solid #FFFFFF;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      z-index: 8;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      user-select: none;
+    }
+
+    [data-theme="light"] .center-spin-btn {
+      background: linear-gradient(135deg, #4F46E5, #3730A3);
+      border-color: #FFFFFF;
+    }
+
+    .center-spin-btn:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+      box-shadow: 0 10px 30px rgba(79, 70, 229, 0.5), 0 0 25px rgba(79, 70, 229, 0.4);
+    }
+
+    .center-spin-btn:active {
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+
+    .center-spin-btn.spinning {
+      pointer-events: none;
+      filter: grayscale(0.5);
+      opacity: 0.85;
+    }
+
+    .center-spin-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Wheel Quick Bar Actions */
+    .wheel-quick-bar {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 480px) {
+      .wheel-quick-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .action-btn {
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card-subtle);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.18s ease;
+    }
+
+    .action-btn:hover {
+      background: var(--border-hover);
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+
+    .action-btn:active {
+      transform: scale(0.97);
+    }
+
+    .action-btn svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+    }
+
+    .action-btn.active {
+      background: var(--primary-light);
+      border-color: var(--primary-ring);
+      color: var(--primary);
+    }
+
+    .action-btn.active svg {
+      color: var(--primary);
+    }
+
+    /* Big Main Spin Trigger Button */
+    .spin-trigger-btn {
+      width: 100%;
+      margin-top: 14px;
+      padding: 15px 24px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+      border: none;
+      color: #FFFFFF;
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .spin-trigger-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(79, 70, 229, 0.5);
+    }
+
+    .spin-trigger-btn:active {
+      transform: scale(0.98);
+    }
+
+    .spin-trigger-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .spin-trigger-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Right Panel (Items & History Tabs) */
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Tab Header */
+    .tab-header {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card-subtle);
+      padding: 6px;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .tab-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: var(--radius-full);
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    /* Tab Content Areas */
+    .tab-pane {
+      display: none;
+      padding: 20px;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    /* Presets Selector */
+    .preset-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .preset-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-btn {
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border);
+      background: var(--bg-card-subtle);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+    }
+
+    .chip-btn:hover {
+      background: var(--border-hover);
+      color: var(--text-main);
+    }
+
+    .chip-btn.active {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* Add Item Row */
+    .add-item-form {
+      display: flex;
+      gap: 8px;
+    }
+
+    .input-field {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card-subtle);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-ring);
+    }
+
+    .primary-btn {
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--primary);
+      color: #FFFFFF;
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .primary-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .primary-btn:active {
+      transform: scale(0.97);
+    }
+
+    .secondary-btn {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card-subtle);
+      color: var(--text-main);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+    }
+
+    .secondary-btn:hover {
+      background: var(--border-hover);
+    }
+
+    /* Items List Container */
+    .items-container {
+      max-height: 280px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 4px;
+    }
+
+    .items-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .items-container::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    /* Single Item Tile */
+    .item-tile {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: all 0.15s ease;
+    }
+
+    .item-tile:hover {
+      border-color: var(--border-hover);
+    }
+
+    .item-tile.disabled {
+      opacity: 0.45;
+      text-decoration: line-through;
+    }
+
+    .item-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-color-pill {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .item-text {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .del-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-subtle);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .del-btn:hover {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .del-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* Options / Toggles */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .setting-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .setting-title {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .setting-desc {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    /* iOS Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border-hover);
+      transition: .25s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* History List */
+    .history-container {
+      max-height: 380px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-tile {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .history-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+
+    .history-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .history-time {
+      font-size: 0.76rem;
+      color: var(--text-subtle);
+    }
+
+    .empty-state {
+      padding: 40px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-muted);
+    }
+
+    .empty-state svg {
+      width: 36px;
+      height: 36px;
+      color: var(--text-subtle);
+    }
+
+    /* Bulk Import Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-xl);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: modalSlide 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalSlide {
+      from { transform: scale(0.92) translateY(20px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .modal-title {
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--bg-card-subtle);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      color: var(--text-main);
+    }
+
+    .modal-textarea {
+      width: 100%;
+      height: 140px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card-subtle);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      resize: vertical;
+      outline: none;
+    }
+
+    .modal-textarea:focus {
+      border-color: var(--primary);
+    }
+
+    /* Winner Celebration Modal */
+    .winner-box {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 32px 24px;
+    }
+
+    .winner-icon-badge {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F59E0B, #EC4899);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.45);
+      animation: bounceWin 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .winner-icon-badge svg {
+      width: 32px;
+      height: 32px;
+      color: #FFFFFF;
+    }
+
+    @keyframes bounceWin {
+      0% { transform: scale(0.3); }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    .winner-subtitle {
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+    }
+
+    .winner-display-name {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      background: linear-gradient(135deg, var(--text-main) 30%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      word-break: break-word;
+      padding: 0 10px;
+    }
+
+    .winner-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .winner-btn-group .primary-btn,
+    .winner-btn-group .secondary-btn {
+      flex: 1;
+      justify-content: center;
+      padding: 12px 18px;
+    }
+
+    /* Footer Note (Italic, onSurfaceVariant / muted) */
+    .footer-note {
+      text-align: center;
+      font-size: 0.8rem;
+      font-style: italic;
+      color: var(--text-subtle);
+      margin-top: auto;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+
+  <div class="app-shell">
+    <!-- Header Navigation -->
+    <header class="nav-bar">
+      <a href="#" class="brand">
+        <div class="brand-icon">
+          <!-- Wheel Vector Mark -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          SPIN PRO
+          <span class="brand-badge">Universal</span>
+        </div>
+      </a>
+
+      <div class="nav-actions">
+        <!-- Sound Toggle -->
+        <button id="soundToggleBtn" class="icon-btn" title="Suara (Aktif/Mute)">
+          <svg id="soundIconOn" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          </svg>
+          <svg id="soundIconOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="display: none;">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <line x1="23" y1="9" x2="17" y2="15"/>
+            <line x1="17" y1="9" x2="23" y2="15"/>
+          </svg>
+        </button>
+
+        <!-- Fullscreen Toggle -->
+        <button id="fullscreenBtn" class="icon-btn" title="Layar Penuh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          </svg>
+        </button>
+
+        <!-- Theme Toggle (Dark/Light) -->
+        <button id="themeToggleBtn" class="icon-btn" title="Ganti Tema">
+          <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="display: none;">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Bento Grid Section -->
+    <main class="bento-grid">
+      <!-- Left Column: The Wheel Stage -->
+      <section class="wheel-card">
+        <div class="wheel-status-bar">
+          <div class="status-pill">
+            <span id="statusDot" class="status-dot"></span>
+            <span id="statusText">Siap Putar</span>
+          </div>
+
+          <div class="status-pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span id="itemsCountBadge">8 Item</span>
+          </div>
+        </div>
+
+        <!-- Wheel Canvas Container -->
+        <div class="wheel-stage">
+          <!-- Physical Needle / Pointer (Pointing Down into the top edge) -->
+          <div id="wheelPointer" class="wheel-pointer">
+            <svg viewBox="0 0 38 48" fill="none">
+              <path d="M19 46 L34 10 C36 6 34 2 29 2 L9 2 C4 2 2 6 4 10 Z" fill="#F8FAFC" stroke="#0F172A" stroke-width="3" stroke-linejoin="round"/>
+              <circle cx="19" cy="14" r="5" fill="#4F46E5"/>
+            </svg>
+          </div>
+
+          <!-- Canvas -->
+          <canvas id="wheelCanvas" width="800" height="800"></canvas>
+
+          <!-- Center Spin Hub Button -->
+          <button id="centerSpinBtn" class="center-spin-btn" title="Klik untuk Memutar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            <span>PUTAR</span>
+          </button>
+        </div>
+
+        <!-- Quick Wheel Controls Bar -->
+        <div class="wheel-quick-bar">
+          <button id="shuffleBtn" class="action-btn" title="Acak Posisi Item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="16 3 21 3 21 8"/>
+              <line x1="4" y1="20" x2="21" y2="3"/>
+              <polyline points="21 16 21 21 16 21"/>
+              <line x1="15" y1="15" x2="21" y2="21"/>
+              <line x1="4" y1="4" x2="9" y2="9"/>
+            </svg>
+            Acak
+          </button>
+
+          <button id="sortBtn" class="action-btn" title="Urutkan A-Z">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M3 6h18M3 12h12M3 18h6"/>
+            </svg>
+            Urut A-Z
+          </button>
+
+          <button id="bulkOpenBtn" class="action-btn" title="Tambah Banyak Sekaligus">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+            Impor
+          </button>
+
+          <button id="autoRemoveToggleBtn" class="action-btn" title="Hapus otomatis nama pemenang setelah terpilih">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            <span id="autoRemoveLabel">Auto: Off</span>
+          </button>
+        </div>
+
+        <!-- Big Spin Action Button (Accessible & Mobile Friendly) -->
+        <button id="mainSpinBtn" class="spin-trigger-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          PUTAR RODA SEKARANG
+        </button>
+      </section>
+
+      <!-- Right Column: Settings, Presets, Item Management, History -->
+      <section class="panel-card">
+        <!-- Tab Navigation -->
+        <div class="tab-header">
+          <button id="tabItemsBtn" class="tab-btn active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <line x1="8" y1="6" x2="21" y2="6"/>
+              <line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            Daftar Item
+            <span id="itemsTabBadge" class="tab-badge">8</span>
+          </button>
+
+          <button id="tabHistoryBtn" class="tab-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Riwayat Pemenang
+            <span id="historyTabBadge" class="tab-badge">0</span>
+          </button>
+        </div>
+
+        <!-- Tab 1: Item Management & Presets -->
+        <div id="tabItemsPane" class="tab-pane active">
+          <!-- Preset Library Selector -->
+          <div class="preset-group">
+            <div class="section-label">
+              <span>Preset Cepat</span>
+              <span style="font-size: 0.7rem; font-weight: 500;">Pilih template</span>
+            </div>
+            <div class="preset-chips">
+              <button class="chip-btn active" data-preset="peserta">Peserta Undian</button>
+              <button class="chip-btn" data-preset="keputusan">Ya / Tidak</button>
+              <button class="chip-btn" data-preset="hadiah">Doorprize / Hadiah</button>
+              <button class="chip-btn" data-preset="angka">Angka 1-10</button>
+              <button class="chip-btn" data-preset="kuliner">Makan Siang</button>
+            </div>
+          </div>
+
+          <!-- Add Item Row -->
+          <div class="preset-group">
+            <div class="section-label">
+              <span>Tambah Item Baru</span>
+            </div>
+            <form id="addItemForm" class="add-item-form">
+              <input type="text" id="newItemInput" class="input-field" placeholder="Ketik nama atau item..." maxlength="40" autocomplete="off">
+              <button type="submit" class="primary-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Tambah
+              </button>
+            </form>
+          </div>
+
+          <!-- Items List Container -->
+          <div class="preset-group">
+            <div class="section-label">
+              <span>Daftar Segmen Roda</span>
+              <button id="resetPresetBtn" class="secondary-btn" style="padding: 2px 8px; font-size: 0.72rem;">Reset Default</button>
+            </div>
+            <div id="itemsContainer" class="items-container">
+              <!-- Dynamically populated item tiles -->
+            </div>
+          </div>
+
+          <!-- Spin Settings -->
+          <div class="preset-group">
+            <div class="section-label">
+              <span>Pengaturan Putaran</span>
+            </div>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">Auto-Eliminasi Pemenang</span>
+                <span class="setting-desc">Hapus otomatis nama yang sudah menang dari roda</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="autoRemoveCheckbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">Durasi Putaran</span>
+                <span class="setting-desc" id="durationDesc">Sedang (5 detik)</span>
+              </div>
+              <select id="spinDurationSelect" class="input-field" style="width: auto; padding: 6px 12px; font-size: 0.82rem;">
+                <option value="3000">Cepat (3s)</option>
+                <option value="5000" selected>Sedang (5s)</option>
+                <option value="8000">Dramatis (8s)</option>
+                <option value="12000">Tegang (12s)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: History of Winners -->
+        <div id="tabHistoryPane" class="tab-pane">
+          <div class="section-label">
+            <span>Hasil Undian</span>
+            <div style="display: flex; gap: 6px;">
+              <button id="copyHistoryBtn" class="secondary-btn" style="padding: 4px 8px; font-size: 0.75rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Salin
+              </button>
+              <button id="clearHistoryBtn" class="secondary-btn" style="padding: 4px 8px; font-size: 0.75rem; color: var(--danger);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                </svg>
+                Hapus
+              </button>
+            </div>
+          </div>
+
+          <div id="historyContainer" class="history-container">
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>Belum ada hasil undian. Putar roda untuk memulai!</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Note -->
+    <footer class="footer-note">
+      *Spin Pro · Universal Lucky Wheel. Dibuat dengan arsitektur web modern, Web Audio API, dan zero-emoji vector styling.*
+    </footer>
+  </div>
+
+  <!-- Bulk Import Modal -->
+  <div id="bulkModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-title">
+        <span>Impor Banyak Item</span>
+        <button id="bulkCloseBtn" class="close-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <p style="font-size: 0.84rem; color: var(--text-muted);">
+        Tempelkan daftar item di bawah ini (satu item per baris atau pisahkan dengan koma):
+      </p>
+      <textarea id="bulkTextarea" class="modal-textarea" placeholder="Contoh:&#10;Andi&#10;Budi&#10;Citra&#10;Dedi"></textarea>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button id="bulkCancelBtn" class="secondary-btn">Batal</button>
+        <button id="bulkSaveBtn" class="primary-btn">Terapkan ke Roda</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Winner Celebration Modal -->
+  <div id="winnerModal" class="modal-overlay">
+    <div class="modal-box winner-box">
+      <div class="winner-icon-badge">
+        <!-- Trophy Vector Icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+          <path d="M4 22h16"/>
+          <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"/>
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+        </svg>
+      </div>
+
+      <div class="winner-subtitle">Selamat Kepada Pemenang!</div>
+      <div id="winnerName" class="winner-display-name">Juara</div>
+
+      <div class="winner-btn-group">
+        <button id="spinAgainBtn" class="primary-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          </svg>
+          Putar Lagi
+        </button>
+        <button id="removeWinnerBtn" class="secondary-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Hapus Pemenang
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JavaScript -->
+  <script>
+    /* ==========================================================================
+       SPIN PRO CORE ENGINE (WEB AUDIO, CANVAS PHYSICS, STATE MANAGEMENT)
+       ========================================================================== */
+    (function () {
+      'use strict';
+
+      // Preset Palettes (Vibrant Modern Colors)
+      const PALETTES = [
+        '#4F46E5', // Indigo
+        '#06B6D4', // Cyan
+        '#10B981', // Emerald
+        '#F59E0B', // Amber
+        '#EC4899', // Pink
+        '#8B5CF6', // Violet
+        '#F97316', // Orange
+        '#14B8A6', // Teal
+        '#E11D48', // Rose
+        '#3B82F6', // Blue
+        '#84CC16', // Lime
+        '#6366F1'  // Indigo Light
+      ];
+
+      // Presets Data
+      const PRESETS = {
+        peserta: ['Andi', 'Budi', 'Citra', 'Dewi', 'Eko', 'Fani', 'Gilang', 'Hani'],
+        keputusan: ['Ya, Gas!', 'Tidak', 'Mungkin Nanti', 'Coba Lagi'],
+        hadiah: ['Smart TV', 'Smartphone', 'Sepeda Lipat', 'Smartwatch', 'Saldo 100K', 'Zonk', 'Voucher 50K', 'Tumbler Keren'],
+        angka: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+        kuliner: ['Nasi Padang', 'Bakso Solo', 'Mie Ayam', 'Ayam Geprek', 'Sate Madura', 'Nasi Goreng', 'Pizza', 'Gado-Gado']
+      };
+
+      // State Object
+      const state = {
+        items: [],
+        currentAngle: 0,
+        isSpinning: false,
+        duration: 5000,
+        autoRemove: false,
+        soundEnabled: true,
+        history: [],
+        theme: 'dark'
+      };
+
+      // DOM Elements
+      const canvas = document.getElementById('wheelCanvas');
+      const ctx = canvas.getContext('2d');
+      const pointerEl = document.getElementById('wheelPointer');
+      const centerSpinBtn = document.getElementById('centerSpinBtn');
+      const mainSpinBtn = document.getElementById('mainSpinBtn');
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+      const itemsCountBadge = document.getElementById('itemsCountBadge');
+      const itemsTabBadge = document.getElementById('itemsTabBadge');
+      const historyTabBadge = document.getElementById('historyTabBadge');
+      const itemsContainer = document.getElementById('itemsContainer');
+      const historyContainer = document.getElementById('historyContainer');
+      const addItemForm = document.getElementById('addItemForm');
+      const newItemInput = document.getElementById('newItemInput');
+      const autoRemoveCheckbox = document.getElementById('autoRemoveCheckbox');
+      const autoRemoveToggleBtn = document.getElementById('autoRemoveToggleBtn');
+      const autoRemoveLabel = document.getElementById('autoRemoveLabel');
+      const spinDurationSelect = document.getElementById('spinDurationSelect');
+      const soundToggleBtn = document.getElementById('soundToggleBtn');
+      const soundIconOn = document.getElementById('soundIconOn');
+      const soundIconOff = document.getElementById('soundIconOff');
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      const moonIcon = document.getElementById('moonIcon');
+      const sunIcon = document.getElementById('sunIcon');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+      // Modals
+      const winnerModal = document.getElementById('winnerModal');
+      const winnerName = document.getElementById('winnerName');
+      const spinAgainBtn = document.getElementById('spinAgainBtn');
+      const removeWinnerBtn = document.getElementById('removeWinnerBtn');
+      const bulkModal = document.getElementById('bulkModal');
+      const bulkOpenBtn = document.getElementById('bulkOpenBtn');
+      const bulkCloseBtn = document.getElementById('bulkCloseBtn');
+      const bulkCancelBtn = document.getElementById('bulkCancelBtn');
+      const bulkSaveBtn = document.getElementById('bulkSaveBtn');
+      const bulkTextarea = document.getElementById('bulkTextarea');
+      const shuffleBtn = document.getElementById('shuffleBtn');
+      const sortBtn = document.getElementById('sortBtn');
+      const resetPresetBtn = document.getElementById('resetPresetBtn');
+      const copyHistoryBtn = document.getElementById('copyHistoryBtn');
+      const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+      let currentPresetKey = 'peserta';
+      let lastWinningIndex = -1;
+      let lastPegIndex = -1;
+
+      /* ========================================================================
+         WEB AUDIO SYNTHESIS (Zero External Audio File Dependencies)
+         ======================================================================== */
+      let audioCtx = null;
+
+      function getAudioContext() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      // Crisp Mechanical Tick
+      function playTickSound(velocityRatio = 1) {
+        if (!state.soundEnabled) return;
+        try {
+          const actx = getAudioContext();
+          if (!actx) return;
+
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          const filter = actx.createBiquadFilter();
+
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(650 + velocityRatio * 350, actx.currentTime);
+          filter.Q.setValueAtTime(4, actx.currentTime);
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(450 + velocityRatio * 250, actx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(150, actx.currentTime + 0.025);
+
+          const volume = Math.min(0.35, 0.15 + velocityRatio * 0.2);
+          gain.gain.setValueAtTime(volume, actx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.025);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(actx.destination);
+
+          osc.start();
+          osc.stop(actx.currentTime + 0.03);
+        } catch (e) {}
+      }
+
+      // Grand Celebratory Fanfare (C5, E5, G5, C6 Harmonic Arpeggio)
+      function playFanfareSound() {
+        if (!state.soundEnabled) return;
+        try {
+          const actx = getAudioContext();
+          if (!actx) return;
+
+          const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+          notes.forEach((freq, idx) => {
+            const start = actx.currentTime + idx * 0.09;
+            const osc = actx.createOscillator();
+            const gain = actx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, start);
+
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(0.25, start + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + (idx === 3 ? 0.75 : 0.45));
+
+            osc.connect(gain);
+            gain.connect(actx.destination);
+
+            osc.start(start);
+            osc.stop(start + (idx === 3 ? 0.8 : 0.5));
+          });
+        } catch (e) {}
+      }
+
+      // Subtle Tactile Click
+      function playClickSound() {
+        if (!state.soundEnabled) return;
+        try {
+          const actx = getAudioContext();
+          if (!actx) return;
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(900, actx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(300, actx.currentTime + 0.015);
+
+          gain.gain.setValueAtTime(0.15, actx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.015);
+
+          osc.connect(gain);
+          gain.connect(actx.destination);
+          osc.start();
+          osc.stop(actx.currentTime + 0.02);
+        } catch (e) {}
+      }
+
+      /* ========================================================================
+         CANVAS RETINA RENDERING & WHEEL DRAWING
+         ======================================================================== */
+      function setupCanvasDPI() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 2;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.resetTransform();
+        ctx.scale(dpr, dpr);
+      }
+
+      function drawWheel() {
+        const rect = canvas.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        const cx = width / 2;
+        const cy = height / 2;
+        const radius = Math.min(cx, cy) - 8;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const items = state.items;
+        const total = items.length;
+
+        if (total === 0) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+          ctx.fillStyle = state.theme === 'dark' ? '#1F2937' : '#E2E8F0';
+          ctx.fill();
+          ctx.strokeStyle = state.theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#CBD5E1';
+          ctx.lineWidth = 4;
+          ctx.stroke();
+
+          ctx.fillStyle = state.theme === 'dark' ? '#94A3B8' : '#64748B';
+          ctx.font = '600 15px Plus Jakarta Sans';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('Tambahkan Item untuk Memulai', cx, cy);
+          return;
+        }
+
+        const sliceAngle = (2 * Math.PI) / total;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(state.currentAngle);
+
+        // Draw Outer Rim Glow & Base
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#0F172A';
+        ctx.fill();
+
+        // Draw Each Slice
+        for (let i = 0; i < total; i++) {
+          const startAngle = i * sliceAngle;
+          const endAngle = startAngle + sliceAngle;
+          const color = items[i].color || PALETTES[i % PALETTES.length];
+
+          // Draw Slice Path
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, radius - 6, startAngle, endAngle);
+          ctx.closePath();
+          ctx.fillStyle = color;
+          ctx.fill();
+
+          // Slice separator line
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.stroke();
+
+          // Draw Text along radius
+          ctx.save();
+          ctx.rotate(startAngle + sliceAngle / 2);
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#FFFFFF';
+
+          // Adaptive font size
+          const text = items[i].name;
+          const maxTextRadius = radius * 0.88;
+          let fontSize = Math.floor(Math.min(18, Math.max(12, 180 / total)));
+          if (text.length > 12) fontSize = Math.max(10, fontSize - 3);
+
+          ctx.font = `700 ${fontSize}px Outfit, Plus Jakarta Sans, sans-serif`;
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetX = 1;
+          ctx.shadowOffsetY = 1;
+
+          // Truncate if exceptionally long
+          let displayText = text;
+          if (displayText.length > 16) {
+            displayText = displayText.slice(0, 15) + '…';
+          }
+
+          ctx.fillText(displayText, maxTextRadius, 0);
+          ctx.restore();
+        }
+
+        // Outer Metallic Rim
+        ctx.beginPath();
+        ctx.arc(0, 0, radius - 4, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // Decorative Pegs (dots on rim)
+        for (let i = 0; i < total; i++) {
+          const pegAngle = i * sliceAngle;
+          const px = (radius - 5) * Math.cos(pegAngle);
+          const py = (radius - 5) * Math.sin(pegAngle);
+
+          ctx.beginPath();
+          ctx.arc(px, py, 3.5, 0, 2 * Math.PI);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fill();
+          ctx.strokeStyle = '#0F172A';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      /* ========================================================================
+         PHYSICS SPIN ENGINE
+         ======================================================================== */
+      function spinWheel() {
+        if (state.isSpinning || state.items.length < 2) return;
+
+        getAudioContext(); // Ensure audio context is ready
+        state.isSpinning = true;
+        setSpinUIState(true);
+
+        const total = state.items.length;
+        const sliceAngle = (2 * Math.PI) / total;
+
+        // Choose random winning index (0 to total - 1)
+        const winningIndex = Math.floor(Math.random() * total);
+        lastWinningIndex = winningIndex;
+
+        // Pointer is positioned at the top: angle = -PI/2 (or 3PI/2)
+        // We want slice `winningIndex` to be under the pointer when stopped.
+        // Slice i starts at `i * sliceAngle` and ends at `(i + 1) * sliceAngle`.
+        // To be safely in the middle: target slice angle is `(winningIndex + 0.5) * sliceAngle`.
+        // Center under top pointer (-PI/2):
+        // (state.currentAngle + targetSliceAngle) % 2PI = -PI/2 = 3PI/2 = 1.5 * PI.
+        // Therefore, finalAngle = 1.5 * PI - (winningIndex + 0.5) * sliceAngle (plus full revolutions).
+        
+        const fullRotations = Math.floor(Math.random() * 3) + 6; // 6 to 8 full spins
+        const pointerAngle = (3 * Math.PI) / 2; // Top position
+        const targetSliceCenter = (winningIndex + 0.5) * sliceAngle;
+        
+        // Compute desired ending angle modulo 2PI
+        let desiredMod = (pointerAngle - targetSliceCenter) % (2 * Math.PI);
+        if (desiredMod < 0) desiredMod += 2 * Math.PI;
+
+        const currentMod = state.currentAngle % (2 * Math.PI);
+        let extraAngle = desiredMod - currentMod;
+        if (extraAngle < 0) extraAngle += 2 * Math.PI;
+
+        const startAngle = state.currentAngle;
+        const totalDelta = (fullRotations * 2 * Math.PI) + extraAngle;
+        const endAngle = startAngle + totalDelta;
+
+        const startTime = performance.now();
+        const duration = state.duration;
+
+        lastPegIndex = -1;
+
+        function animate(now) {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+
+          // Cubic Ease-Out deceleration
+          const easeProgress = 1 - Math.pow(1 - progress, 3);
+          state.currentAngle = startAngle + totalDelta * easeProgress;
+
+          // Needle deflection & Audio Ticking
+          // Pointer is at 1.5 * PI. The wheel angle under pointer is:
+          const pointerPosOnWheel = ((3 * Math.PI) / 2 - state.currentAngle) % (2 * Math.PI);
+          const normalizedPos = pointerPosOnWheel < 0 ? pointerPosOnWheel + 2 * Math.PI : pointerPosOnWheel;
+          const currentPeg = Math.floor(normalizedPos / sliceAngle);
+
+          if (currentPeg !== lastPegIndex) {
+            lastPegIndex = currentPeg;
+            const velocity = (1 - progress);
+            playTickSound(velocity);
+
+            // Pointer wiggle physical bounce
+            pointerEl.style.transform = `translateX(-50%) rotate(${Math.sin(now * 0.05) > 0 ? 12 : -12}deg)`;
+            setTimeout(() => {
+              if (state.isSpinning) {
+                pointerEl.style.transform = 'translateX(-50%) rotate(0deg)';
+              }
+            }, 30);
+          }
+
+          drawWheel();
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            // Spinning complete
+            state.currentAngle = endAngle;
+            pointerEl.style.transform = 'translateX(-50%) rotate(0deg)';
+            drawWheel();
+            finishSpin(winningIndex);
+          }
+        }
+
+        requestAnimationFrame(animate);
+      }
+
+      function setSpinUIState(spinning) {
+        if (spinning) {
+          statusDot.classList.add('spinning');
+          statusText.textContent = 'Sedang Berputar...';
+          centerSpinBtn.classList.add('spinning');
+          centerSpinBtn.disabled = true;
+          mainSpinBtn.disabled = true;
+          mainSpinBtn.textContent = 'RODA BERPUTAR...';
+        } else {
+          statusDot.classList.remove('spinning');
+          statusText.textContent = 'Siap Putar';
+          centerSpinBtn.classList.remove('spinning');
+          centerSpinBtn.disabled = false;
+          mainSpinBtn.disabled = false;
+          mainSpinBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            PUTAR RODA SEKARANG
+          `;
+        }
+      }
+
+      function finishSpin(winnerIdx) {
+        state.isSpinning = false;
+        setSpinUIState(false);
+
+        const winner = state.items[winnerIdx];
+        if (!winner) return;
+
+        // Sound fanfare
+        playFanfareSound();
+
+        // Confetti celebration
+        launchConfetti();
+
+        // Add to history
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        state.history.unshift({
+          name: winner.name,
+          time: timeStr
+        });
+        updateHistoryUI();
+
+        // Show Winner Modal
+        winnerName.textContent = winner.name;
+        winnerModal.classList.add('active');
+
+        // If Auto-Remove is enabled, remove immediately
+        if (state.autoRemove) {
+          setTimeout(() => {
+            removeItem(winnerIdx);
+          }, 800);
+        }
+      }
+
+      /* ========================================================================
+         CONFETTI CANNON (Canvas-Confetti + Fallback)
+         ======================================================================== */
+      function launchConfetti() {
+        if (typeof confetti === 'function') {
+          // Dual side burst
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6, x: 0.3 }
+          });
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6, x: 0.7 }
+          });
+        }
+      }
+
+      /* ========================================================================
+         ITEMS & STATE MANAGEMENT
+         ======================================================================== */
+      function loadPreset(key) {
+        currentPresetKey = key;
+        const list = PRESETS[key] || PRESETS.peserta;
+        state.items = list.map((name, i) => ({
+          name: name,
+          color: PALETTES[i % PALETTES.length]
+        }));
+        renderItemsList();
+        drawWheel();
+
+        // Update active chip
+        document.querySelectorAll('.chip-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.preset === key);
+        });
+      }
+
+      function renderItemsList() {
+        itemsContainer.innerHTML = '';
+        state.items.forEach((item, index) => {
+          const tile = document.createElement('div');
+          tile.className = 'item-tile';
+          tile.innerHTML = `
+            <div class="item-meta">
+              <span class="item-color-pill" style="background-color: ${item.color};"></span>
+              <span class="item-text">${escapeHtml(item.name)}</span>
+            </div>
+            <div class="item-actions">
+              <button class="del-btn" data-index="${index}" title="Hapus Item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          `;
+          itemsContainer.appendChild(tile);
+        });
+
+        // Badges
+        const count = state.items.length;
+        itemsCountBadge.textContent = `${count} Item`;
+        itemsTabBadge.textContent = count;
+      }
+
+      function addItem(name) {
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        const newColor = PALETTES[state.items.length % PALETTES.length];
+        state.items.push({
+          name: trimmed,
+          color: newColor
+        });
+        renderItemsList();
+        drawWheel();
+      }
+
+      function removeItem(index) {
+        if (index >= 0 && index < state.items.length) {
+          state.items.splice(index, 1);
+          renderItemsList();
+          drawWheel();
+        }
+      }
+
+      function shuffleItems() {
+        if (state.items.length < 2) return;
+        playClickSound();
+        for (let i = state.items.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [state.items[i], state.items[j]] = [state.items[j], state.items[i]];
+        }
+        renderItemsList();
+        drawWheel();
+      }
+
+      function sortItems() {
+        if (state.items.length < 2) return;
+        playClickSound();
+        state.items.sort((a, b) => a.name.localeCompare(b.name, 'id', { numeric: true }));
+        renderItemsList();
+        drawWheel();
+      }
+
+      function updateHistoryUI() {
+        historyTabBadge.textContent = state.history.length;
+        if (state.history.length === 0) {
+          historyContainer.innerHTML = `
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>Belum ada hasil undian. Putar roda untuk memulai!</span>
+            </div>
+          `;
+          return;
+        }
+
+        historyContainer.innerHTML = '';
+        state.history.forEach((h, idx) => {
+          const tile = document.createElement('div');
+          tile.className = 'history-tile';
+          tile.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="history-badge">#${state.history.length - idx}</span>
+              <span class="history-name">${escapeHtml(h.name)}</span>
+            </div>
+            <span class="history-time">${h.time}</span>
+          `;
+          historyContainer.appendChild(tile);
+        });
+      }
+
+      function escapeHtml(str) {
+        return str.replace(/[&<>'"]/g, tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag));
+      }
+
+      /* ========================================================================
+         EVENT LISTENERS & BINDINGS
+         ======================================================================== */
+      // Spin Actions
+      centerSpinBtn.addEventListener('click', spinWheel);
+      mainSpinBtn.addEventListener('click', spinWheel);
+
+      // Keyboard spacebar shortcut
+      window.addEventListener('keydown', e => {
+        if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+          e.preventDefault();
+          spinWheel();
+        } else if (e.code === 'Escape') {
+          winnerModal.classList.remove('active');
+          bulkModal.classList.remove('active');
+        }
+      });
+
+      // Add Item Form
+      addItemForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const val = newItemInput.value;
+        if (val) {
+          addItem(val);
+          newItemInput.value = '';
+          playClickSound();
+        }
+      });
+
+      // Delete Item Click Delegation
+      itemsContainer.addEventListener('click', e => {
+        const delBtn = e.target.closest('.del-btn');
+        if (delBtn) {
+          const idx = parseInt(delBtn.dataset.index, 10);
+          removeItem(idx);
+          playClickSound();
+        }
+      });
+
+      // Preset Chips Click
+      document.querySelectorAll('.chip-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          playClickSound();
+          loadPreset(btn.dataset.preset);
+        });
+      });
+
+      // Reset Preset
+      resetPresetBtn.addEventListener('click', () => {
+        playClickSound();
+        loadPreset(currentPresetKey);
+      });
+
+      // Shuffle & Sort
+      shuffleBtn.addEventListener('click', shuffleItems);
+      sortBtn.addEventListener('click', sortItems);
+
+      // Auto-Remove Toggles
+      function setAutoRemove(val) {
+        state.autoRemove = val;
+        autoRemoveCheckbox.checked = val;
+        autoRemoveToggleBtn.classList.toggle('active', val);
+        autoRemoveLabel.textContent = val ? 'Auto: On' : 'Auto: Off';
+      }
+
+      autoRemoveCheckbox.addEventListener('change', e => {
+        setAutoRemove(e.target.checked);
+        playClickSound();
+      });
+
+      autoRemoveToggleBtn.addEventListener('click', () => {
+        setAutoRemove(!state.autoRemove);
+        playClickSound();
+      });
+
+      // Spin Duration Select
+      spinDurationSelect.addEventListener('change', e => {
+        state.duration = parseInt(e.target.value, 10);
+        const descMap = {
+          '3000': 'Cepat (3 detik)',
+          '5000': 'Sedang (5 detik)',
+          '8000': 'Dramatis (8 detik)',
+          '12000': 'Tegang (12 detik)'
+        };
+        document.getElementById('durationDesc').textContent = descMap[e.target.value] || '5 detik';
+        playClickSound();
+      });
+
+      // Sound Toggle
+      soundToggleBtn.addEventListener('click', () => {
+        state.soundEnabled = !state.soundEnabled;
+        soundIconOn.style.display = state.soundEnabled ? 'block' : 'none';
+        soundIconOff.style.display = state.soundEnabled ? 'none' : 'block';
+        if (state.soundEnabled) playClickSound();
+      });
+
+      // Theme Toggle (Dark / Light)
+      themeToggleBtn.addEventListener('click', () => {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', state.theme);
+        moonIcon.style.display = state.theme === 'dark' ? 'block' : 'none';
+        sunIcon.style.display = state.theme === 'dark' ? 'none' : 'block';
+        playClickSound();
+        drawWheel();
+      });
+
+      // Fullscreen Toggle
+      fullscreenBtn.addEventListener('click', () => {
+        playClickSound();
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+
+      // Tab Switching
+      const tabItemsBtn = document.getElementById('tabItemsBtn');
+      const tabHistoryBtn = document.getElementById('tabHistoryBtn');
+      const tabItemsPane = document.getElementById('tabItemsPane');
+      const tabHistoryPane = document.getElementById('tabHistoryPane');
+
+      tabItemsBtn.addEventListener('click', () => {
+        tabItemsBtn.classList.add('active');
+        tabHistoryBtn.classList.remove('active');
+        tabItemsPane.classList.add('active');
+        tabHistoryPane.classList.remove('active');
+        playClickSound();
+      });
+
+      tabHistoryBtn.addEventListener('click', () => {
+        tabHistoryBtn.classList.add('active');
+        tabItemsBtn.classList.remove('active');
+        tabHistoryPane.classList.add('active');
+        tabItemsPane.classList.remove('active');
+        playClickSound();
+      });
+
+      // Winner Modal Actions
+      spinAgainBtn.addEventListener('click', () => {
+        winnerModal.classList.remove('active');
+        playClickSound();
+        setTimeout(spinWheel, 300);
+      });
+
+      removeWinnerBtn.addEventListener('click', () => {
+        winnerModal.classList.remove('active');
+        playClickSound();
+        if (lastWinningIndex >= 0 && lastWinningIndex < state.items.length) {
+          removeItem(lastWinningIndex);
+        }
+      });
+
+      winnerModal.addEventListener('click', e => {
+        if (e.target === winnerModal) {
+          winnerModal.classList.remove('active');
+        }
+      });
+
+      // Bulk Modal Actions
+      bulkOpenBtn.addEventListener('click', () => {
+        playClickSound();
+        bulkTextarea.value = state.items.map(it => it.name).join('\n');
+        bulkModal.classList.add('active');
+        bulkTextarea.focus();
+      });
+
+      bulkCloseBtn.addEventListener('click', () => bulkModal.classList.remove('active'));
+      bulkCancelBtn.addEventListener('click', () => bulkModal.classList.remove('active'));
+
+      bulkSaveBtn.addEventListener('click', () => {
+        playClickSound();
+        const raw = bulkTextarea.value;
+        const lines = raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+        if (lines.length > 0) {
+          state.items = lines.map((name, i) => ({
+            name: name,
+            color: PALETTES[i % PALETTES.length]
+          }));
+          renderItemsList();
+          drawWheel();
+        }
+        bulkModal.classList.remove('active');
+      });
+
+      // Copy & Clear History
+      copyHistoryBtn.addEventListener('click', () => {
+        playClickSound();
+        if (state.history.length === 0) return;
+        const text = state.history.map((h, i) => `#${state.history.length - i}. ${h.name} (${h.time})`).join('\n');
+        navigator.clipboard.writeText(text).then(() => {
+          copyHistoryBtn.textContent = 'Tersalin!';
+          setTimeout(() => {
+            copyHistoryBtn.innerHTML = `
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg> Salin
+            `;
+          }, 1500);
+        });
+      });
+
+      clearHistoryBtn.addEventListener('click', () => {
+        playClickSound();
+        state.history = [];
+        updateHistoryUI();
+      });
+
+      // Resize Listener
+      window.addEventListener('resize', () => {
+        setupCanvasDPI();
+        drawWheel();
+      });
+
+      // Initialize App
+      setupCanvasDPI();
+      loadPreset('peserta');
+    })();
+  </script>
+</body>
+</html>
